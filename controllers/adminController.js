@@ -27,14 +27,14 @@ const getUserById = asyncHandler(async (req, res) => {
 });
 
 
-// @desc    Update user (e.g., change role, username, email)
+// @desc    Update user (e.g., change role, name, email)
 // @route   PUT /api/admin/users/:id
 // @access  Private/Admin
 const updateUser = asyncHandler(async (req, res) => {
     const user = await User.findById(req.params.id);
 
     if (user) {
-        user.username = req.body.username || user.username;
+        user.name = req.body.name || user.name;
         user.email = req.body.email || user.email;
         user.role = req.body.role || user.role; // Allow changing role
 
@@ -46,7 +46,7 @@ const updateUser = asyncHandler(async (req, res) => {
         const updatedUser = await user.save();
         res.json({
             _id: updatedUser._id,
-            username: updatedUser.username,
+            name: updatedUser.name,
             email: updatedUser.email,
             role: updatedUser.role,
         });

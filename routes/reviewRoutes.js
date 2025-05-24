@@ -23,7 +23,7 @@ router.post('/:productId', protect, asyncHandler(async (req, res) => {
         }
 
         const review = {
-            name: req.user.username,
+            name: req.user.name,
             rating: Number(rating),
             comment,
             user: req.user._id,

@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken'); // Import JWT for generateAuthToken method
 
 const userSchema = mongoose.Schema(
   {
-    username: { type: String, required: true, unique: true, trim: true },
+    name: { type: String, required: true, unique: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true },
     role: { type: String, enum: ['customer', 'admin'], default: 'customer' },

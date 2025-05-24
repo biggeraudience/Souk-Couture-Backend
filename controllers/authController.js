@@ -6,7 +6,7 @@ const sendEmail = require('../utils/emailService'); // Import the email service
 // @route   POST /api/auth/register
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
-    const { username, email, password } = req.body;
+    const { name, email, password } = req.body;
 
     const userExists = await User.findOne({ email });
 
@@ -16,7 +16,7 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     const user = await User.create({
-        username,
+        name,
         email,
         password,
     });
@@ -25,13 +25,13 @@ const registerUser = asyncHandler(async (req, res) => {
         // --- Send Welcome Email ---
         const welcomeEmailSubject = 'Welcome to Souk Couture!';
         const welcomeEmailHtml = `
-            <h1>Welcome to Souk Couture, ${user.username}!</h1>
+            <h1>Welcome to Souk Couture, ${user.name}!</h1>
             <p>Thank you for registering. We're excited to have you join our community.</p>
             <p>Start exploring our exquisite collection now!</p>
             <p><a href="${process.env.FRONTEND_URL}">Shop Now</a></p>
             <p>Best regards,<br>The Souk Couture Team</p>
         `;
-        const welcomeEmailText = `Welcome to Souk Couture, ${user.username}!\nThank you for registering. Start exploring our collection now: ${process.env.FRONTEND_URL}\nBest regards,\nThe Souk Couture Team`;
+        const welcomeEmailText = `Welcome to Souk Couture, ${user.name}!\nThank you for registering. Start exploring our collection now: ${process.env.FRONTEND_URL}\nBest regards,\nThe Souk Couture Team`;
 
         await sendEmail({
             to: user.email,
@@ -43,7 +43,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
         res.status(201).json({
             _id: user._id,
-            username: user.username,
+            name: user.name,
             email: user.email,
             role: user.role,
             token: user.generateAuthToken(),
@@ -65,7 +65,7 @@ const loginUser = asyncHandler(async (req, res) => {
     if (user && (await user.matchPassword(password))) {
         res.json({
             _id: user._id,
-            username: user.username,
+            name: user.name,
             email: user.email,
             role: user.role,
             token: user.generateAuthToken(),

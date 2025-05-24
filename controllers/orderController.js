@@ -62,7 +62,7 @@ const createOrder = asyncHandler(async (req, res) => {
 
             const orderConfirmationHtml = `
                 <h1>Order Confirmation for Order #${createdOrder._id}</h1>
-                <p>Dear ${user.username},</p>
+                <p>Dear ${user.name},</p>
                 <p>Thank you for your purchase from Souk Couture. Your order has been successfully placed and is currently <strong>${createdOrder.status.toUpperCase()}</strong>.</p>
                 <h2>Order Details:</h2>
                 <ul>
@@ -84,7 +84,7 @@ const createOrder = asyncHandler(async (req, res) => {
 
             const orderConfirmationText = `
                 Order Confirmation for Order #${createdOrder._id}\n
-                Dear ${user.username},\n
+                Dear ${user.name},\n
                 Thank you for your purchase from Souk Couture. Your order has been successfully placed and is currently ${createdOrder.status.toUpperCase()}.\n
                 Order ID: ${createdOrder._id}\n
                 Total Price: NGN${createdOrder.totalPrice.toFixed(2)}\n
@@ -125,7 +125,7 @@ const getUserOrders = asyncHandler(async (req, res) => {
 // @route   GET /api/orders/:id
 // @access  Private
 const getOrderById = asyncHandler(async (req, res) => {
-    const order = await Order.findById(req.params.id).populate('user', 'username email');
+    const order = await Order.findById(req.params.id).populate('user', 'name email');
 
     if (order) {
         // Ensure only the user who owns the order or an admin can view it

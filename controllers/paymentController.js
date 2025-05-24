@@ -41,7 +41,7 @@ const initializeFlutterwavePayment = asyncHandler(async (req, res) => {
                 customer: {
                     email: user.email,
                     phonenumber: user.phoneNumber || 'N/A', // Add phone number to User model if available
-                    name: user.username,
+                    name: user.name,
                 },
                 customizations: {
                     title: 'Souk Couture Payment',

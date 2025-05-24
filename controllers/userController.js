@@ -9,7 +9,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
     if (user) {
         res.json({
             _id: user._id,
-            username: user.username,
+            name: user.name,
             email: user.email,
             role: user.role,
             addresses: user.addresses,
@@ -27,7 +27,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id);
 
     if (user) {
-        user.username = req.body.username || user.username;
+        user.name = req.body.name || user.name;
         user.email = req.body.email || user.email;
         if (req.body.password) {
             user.password = req.body.password; // Pre-save hook will hash it
@@ -41,7 +41,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 
         res.json({
             _id: updatedUser._id,
-            username: updatedUser.username,
+            name: updatedUser.name,
             email: updatedUser.email,
             role: updatedUser.role,
             addresses: updatedUser.addresses,
