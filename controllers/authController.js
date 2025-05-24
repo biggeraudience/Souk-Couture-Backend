@@ -76,9 +76,7 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    Logout user / clear cookie (if using http-only cookies)
-// @route   POST /api/auth/logout
-// @access  Public
+
 const logoutUser = asyncHandler(async (req, res) => {
   
     res.status(200).json({ message: 'Logged out successfully' });
@@ -89,4 +87,3 @@ module.exports = {
     loginUser,
     logoutUser,
 };
-main
