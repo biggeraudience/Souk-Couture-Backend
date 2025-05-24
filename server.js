@@ -1,24 +1,24 @@
 // server.js
 
-// 1. Must come first—loads all env vars into process.env
-// We keep your existing dotenv.config() and remove the duplicate dotenv import later.
+// 1. Load env vars immediately and at the very top.
+// This ensures process.env is populated before any other code tries to access them.
 require('dotenv').config();
 
 const express = require('express');
-const mongoose = require('mongoose'); // You'll need mongoose here for direct connection
+const mongoose = require('mongoose'); // Mongoose is needed for database connection
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const morgan = require('morgan'); // Adding morgan for logging requests, useful for debugging
+const morgan = require('morgan'); // HTTP request logger
 
-// Assuming these are still needed and correctly implemented
+// Error middleware & controllers
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const { flutterwaveWebhookHandler } = require('./controllers/paymentController');
 
-// 2. Destructure and validate your critical vars
-// This provides better visibility and early error checking for essential environment variables.
+// 2. Destructure & validate critical environment variables.
+// Use MONGODB_URI to match common naming conventions and potentially your Render setup.
 const {
-  PORT = 5000, // Render provides this, fallback to 5000
-  MONGO_URI, // Changed from MONGODB_URI to MONGO_URI to match your .env
+  PORT = 5000,
+  MONGODB_URI, // <--- Using MONGODB_URI as per the suggestion
   JWT_SECRET,
   FRONTEND_URL,
   CLOUDINARY_CLOUD_NAME,
@@ -32,134 +32,115 @@ const {
   RESEND_SENDER_EMAIL
 } = process.env;
 
-// Guard against missing critical environment variables
-if (!MONGO_URI) {
-  console.error('❌ CRITICAL ERROR: MONGO_URI is UNDEFINED. Cannot connect to MongoDB.');
-  process.exit(1); // Exit the process if the database URI is missing
+// Critical checks: exit if essential environment variables are missing
+if (!MONGODB_URI) {
+  console.error('❌ CRITICAL ERROR: MONGODB_URI is UNDEFINED. Cannot connect to MongoDB. Please set it in your Render environment variables.');
+  process.exit(1);
 }
 
+// Warnings for non-critical but important variables
 if (!JWT_SECRET) {
-  console.warn('⚠️ WARNING: JWT_SECRET not set. Authentication may be insecure.');
+  console.warn('⚠️ WARNING: JWT_SECRET is not set. Authentication tokens may be insecure.');
 }
 
 if (!FRONTEND_URL) {
-  console.warn('⚠️ WARNING: FRONTEND_URL not set. CORS might be too permissive or incorrect.');
+  console.warn('⚠️ WARNING: FRONTEND_URL is not set. CORS might be too permissive or incorrect for your frontend.');
 }
 
 const app = express();
 
-// 3. Middleware
-// CORS configuration comes before other middleware if it's the first thing you want to handle.
-const allowedOrigins = FRONTEND_URL ? FRONTEND_URL.split(',') : []; // Handle if FRONTEND_URL is undefined
+// 3. Middleware Setup (Order matters!)
 
-const corsOptions = {
-    origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps, Postman/Insomnia, or curl)
-        // Also allow if the origin is in our allowed list
-        if (!origin || allowedOrigins.includes(origin) || allowedOrigins.length === 0) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: 'Content-Type,Authorization',
-};
-app.use(cors(corsOptions));
-app.use(morgan('dev')); // Logger for HTTP requests, useful for seeing what's happening
-app.use(cookieParser()); // Parses cookies attached to the request object
+// CORS configuration - Allow access from your frontend
+const allowedOrigins = FRONTEND_URL ? FRONTEND_URL.split(',') : []; // Handle undefined FRONTEND_URL gracefully
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, Postman/Insomnia)
+    // Also allow if the origin is in our allowed list, or if no specific origins are defined
+    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.length === 0) {
+      callback(null, true);
+    } else {
+      callback(new Error(`Not allowed by CORS: ${origin}`));
+    }
+  },
+  credentials: true, // Allow cookies to be sent
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  allowedHeaders: 'Content-Type,Authorization',
+}));
+
+app.use(morgan('dev')); // Log HTTP requests to the console (development format)
+app.use(cookieParser()); // Parse cookies from incoming requests
 
 // Important: Flutterwave webhook route needs raw body for signature verification.
-// Place this BEFORE app.use(express.json()) for the webhook path.
-app.post('/api/payments/flutterwave/webhook', express.raw({ type: 'application/json' }), flutterwaveWebhookHandler);
+// This must come BEFORE app.use(express.json()) for this specific path.
+app.post(
+  '/api/payments/flutterwave/webhook',
+  express.raw({ type: 'application/json' }),
+  flutterwaveWebhookHandler
+);
 
-// Body parsers for incoming requests. These will now run AFTER the webhook handler.
-app.use(express.json({ limit: '10mb' })); // Parses JSON request bodies with a larger limit
-app.use(express.urlencoded({ extended: true })); // Parses URL-encoded request bodies
+// Body parsers for all other incoming requests
+app.use(express.json({ limit: '10mb' })); // Parse JSON request bodies, allow larger payloads
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bodies
 
-// 4. Configure Cloudinary (if you use it in your routes)
-// Ensure you have cloudinary installed: npm install cloudinary
-const cloudinary = require('cloudinary').v2;
+// 4. Configure Cloudinary (if you use it for file uploads)
+const cloudinary = require('cloudinary').v2; // Ensure cloudinary package is installed (npm install cloudinary)
 cloudinary.config({
   cloud_name: CLOUDINARY_CLOUD_NAME,
   api_key: CLOUDINARY_API_KEY,
   api_secret: CLOUDINARY_API_SECRET,
 });
 
-// 5. Connect to MongoDB
-// Your original connectDB() function was called, but if it's not robust,
-// it's better to put the connection logic directly here for clarity and error handling.
-// Remove the `connectDB` function call and potentially the file if it only contained this logic.
+// 5. Connect to MongoDB using Mongoose
+// The connection logic is now directly in server.js for better control and error handling.
+// If you had a separate `config/db.js` file with just this connection, you can remove it.
 mongoose
-  .connect(MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+  .connect(MONGODB_URI, {
+    useNewUrlParser: true,    // Recommended for Mongoose 5.x+
+    useUnifiedTopology: true, // Recommended for Mongoose 5.x+
   })
   .then(() => console.log('✅ MongoDB connected successfully!'))
   .catch(err => {
-    console.error('❌ MongoDB connection error:', err);
-    process.exit(1); // Exit the process on a critical DB connection failure
+    console.error('❌ MongoDB connection error:', err.message);
+    process.exit(1); // Exit the application if DB connection fails
   });
 
-// 6. Your routes
-// Public/User Routes
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
-const productRoutes = require('./routes/productRoutes');
-const categoryRoutes = require('./routes/categoryRoutes');
-const cartRoutes = require('./routes/cartRoutes');
-const orderRoutes = require('./routes/orderRoutes');
-const favoriteRoutes = require('./routes/favoriteRoutes');
-const reviewRoutes = require('./routes/reviewRoutes');
-const uploadRoutes = require('./routes/uploadRoutes'); // For image uploads
-const paymentRoutes = require('./routes/paymentRoutes'); // Payment routes import
-
-// Admin Routes (group them under /api/admin)
-const adminProductRoutes = require('./routes/admin/adminProductRoutes');
-const adminUserRoutes = require('./routes/admin/adminUserRoutes');
-const adminOrderRoutes = require('./routes/admin/adminOrderRoutes');
-const adminPromoRoutes = require('./routes/admin/adminPromoRoutes');
-const adminMessageRoutes = require('./routes/admin/adminMessageRoutes');
-
-
-// --- API Endpoints ---
+// 6. Define and Mount API Routes
 app.get('/', (req, res) => {
-    res.send('Souk Couture Backend API is running!');
+  res.send('Souk Couture Backend API is running!');
 });
 
 app.get('/api/test', (req, res) => {
-    res.json({ message: 'Backend test endpoint is responding!' });
+  res.json({ message: 'Backend test endpoint is responding!' });
 });
 
-// Mount Public/User Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/favorites', favoriteRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/upload', uploadRoutes); // Image upload route
-app.use('/api/payments', paymentRoutes); // Mount payment routes
+// Public/User Routes
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/products', require('./routes/productRoutes'));
+app.use('/api/categories', require('./routes/categoryRoutes'));
+app.use('/api/cart', require('./routes/cartRoutes'));
+app.use('/api/orders', require('./routes/orderRoutes'));
+app.use('/api/favorites', require('./routes/favoriteRoutes'));
+app.use('/api/reviews', require('./routes/reviewRoutes'));
+app.use('/api/upload', require('./routes/uploadRoutes'));
+app.use('/api/payments', require('./routes/paymentRoutes'));
 
-// Mount Admin Routes
-app.use('/api/admin/products', adminProductRoutes);
-app.use('/api/admin/users', adminUserRoutes);
-app.use('/api/admin/orders', adminOrderRoutes);
-app.use('/api/admin/promotions', adminPromoRoutes);
-app.use('/api/admin/messages', adminMessageRoutes);
+// Admin Routes (group them under /api/admin)
+const adminBaseRoutesPath = './routes/admin/'; // Helper for cleaner pathing
+app.use('/api/admin/products', require(`${adminBaseRoutesPath}adminProductRoutes`));
+app.use('/api/admin/users', require(`${adminBaseRoutesPath}adminUserRoutes`));
+app.use('/api/admin/orders', require(`${adminBaseRoutesPath}adminOrderRoutes`));
+app.use('/api/admin/promotions', require(`${adminBaseRoutesPath}adminPromoRoutes`));
+app.use('/api/admin/messages', require(`${adminBaseRoutesPath}adminMessageRoutes`));
 
-// --- Error Handling Middleware (MUST BE LAST) ---
-// Catches requests to undefined routes (404 Not Found)
-app.use(notFound);
-// Handles all other errors (e.g., from controllers/middleware)
-app.use(errorHandler);
+// 7. Error Handling Middleware (MUST BE LAST)
+// These catch errors from previous middleware and routes.
+app.use(notFound); // Catches 404s (requests to unhandled routes)
+app.use(errorHandler); // Catches all other errors
 
-
-// 7. Start server
-// Use the destructured PORT
+// 8. Start Server
+// The PORT is picked from process.env.PORT (provided by Render) or defaults to 5000.
 app.listen(PORT, () => {
-    console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 });
