@@ -3,19 +3,19 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken'); // Import JWT for generateAuthToken method
 
 const userSchema = mongoose.Schema(
-  {
-    name: { type: String, required: true, unique: true, trim: true },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true },
-    role: { type: String, enum: ['customer', 'admin'], default: 'customer' },
-    addresses: [{
-      address: { type: String },
-      city: { type: String },
-      postalCode: { type: String },
-      country: { type: String }
-    }]
-  },
-  { timestamps: true }
+ {
+  name: { type: String, required: true, trim: true }, // REMOVED unique: true
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  password: { type: String, required: true },
+  role: { type: String, enum: ['customer', 'admin'], default: 'customer' },
+  addresses: [{
+  address: { type: String },
+  city: { type: String },
+  postalCode: { type: String },
+  country: { type: String }
+  }]
+ },
+ { timestamps: true }
 );
 
 // Hash password before saving
