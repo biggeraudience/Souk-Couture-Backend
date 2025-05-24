@@ -7,10 +7,7 @@ const Category = require('../models/Category');
 const Promotion = require('../models/Promotion');
 const Message = require('../models/Message');
 
-// --- User Management (Admin) ---
-// @desc    Get all users
-// @route   GET /api/admin/users
-// @access  Private/Admin
+//admin
 const getAllUsers = asyncHandler(async (req, res) => {
     const users = await User.find({}).select('-password'); // Exclude passwords
     res.json(users);
