@@ -1,19 +1,24 @@
+// routes/admin/adminProductRoutes.js
 const express = require('express');
 const router = express.Router();
-const {
-    createProduct,
-    updateProduct,
-    deleteProduct,
-    getAdminProducts // Import the new function
-} = require('../../controllers/adminController');
 const { protect, admin } = require('../../middleware/authMiddleware');
+const {
+  getAdminProducts,
+  getAdminProductById,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+} = require('../../controllers/adminProductController');
 
-router.route('/')
-    .get(protect, admin, getAdminProducts) // Admin only to get all products for management
-    .post(protect, admin, createProduct);
+router
+  .route('/')
+  .get(protect, admin, getAdminProducts)
+  .post(protect, admin, createProduct);
 
-router.route('/:id')
-    .put(protect, admin, updateProduct)
-    .delete(protect, admin, deleteProduct);
+router
+  .route('/:id')
+  .get(protect, admin, getAdminProductById)
+  .put(protect, admin, updateProduct)
+  .delete(protect, admin, deleteProduct);
 
 module.exports = router;
