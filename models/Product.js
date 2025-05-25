@@ -1,43 +1,111 @@
 const mongoose = require('mongoose');
 
-const reviewSchema = mongoose.Schema(
-    {
-        user: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
-        name: { type: String, required: true },
-        rating: { type: Number, required: true },
-        comment: { type: String, required: true },
-    },
-    { timestamps: true }
-);
-
 const productSchema = mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true },
-    description: { type: String, required: true },
-    price: { type: Number, required: true, min: 0 },
-    images: [{ type: String, required: true }], // Array of Cloudinary URLs
-    category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
-    sizes: [{ type: String, required: true }], // e.g., ['S', 'M', 'L', 'XL'] or ['7', '8', '9']
-    colors: [{ type: String, required: true }], // e.g., ['Black', 'Blue Denim', 'White']
-    stock: { type: Number, required: true, default: 0, min: 0 }, // Overall stock, can be adjusted for variants
-    isBespoke: { type: Boolean, default: false }, // For custom/bespoke items if applicable
-    reviews: [reviewSchema], // Embedded reviews
-    rating: { type: Number, required: true, default: 0 }, // Average rating
-    numReviews: { type: Number, required: true, default: 0 }, // Count of reviews
+    user: { // The admin who created the product
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'User',
+    },
+    name: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    brand: {
+      type: String,
+      required: false, // Make optional if some products don't have a specific brand
+    },
+    sku: { // Stock Keeping Unit - unique identifier for tracking
+      type: String,
+      unique: true,
+      sparse: true, // Allows null values, so products without SKU won't cause error
+      required: false,
+    },
+    category: { // Reference to Category model
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'Category',
+    },
+    gender: { // Crucial for filtering categories and products
+      type: String,
+      enum: ['men', 'women', 'unisex'],
+      required: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    salePrice: { // Optional: for sales/discounts
+      type: Number,
+      default: null,
+    },
+    isOnSale: {
+      type: Boolean,
+      default: false,
+    },
+    images: [ // Array of Cloudinary URLs
+      {
+        url: { type: String, required: true },
+        public_id: { type: String, required: true },
+      },
+    ],
+    // You might want a 'thumbnail' or 'mainImage' field if you need a specific one for product cards
+    // mainImage: { url: String, public_id: String },
+    stock: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    sizes: [ // Array of available sizes (e.g., ['S', 'M', 'L'] or ['7', '8', '9'])
+      {
+        type: String,
+        required: true,
+      }
+    ],
+    colors: [ // Array of available colors (e.g., ['Black', 'Blue'])
+      {
+        type: String,
+        required: true,
+      }
+    ],
+    materials: [ // Array of materials (e.g., ['Cotton', 'Leather'])
+      {
+        type: String,
+        required: false,
+      }
+    ],
+    careInstructions: {
+      type: String,
+      required: false,
+    },
+    isFeatured: { // For showcasing on homepage or specific sections
+      type: Boolean,
+      default: false,
+    },
+    isArchived: { // Soft delete: hides product from public view but retains data
+      type: Boolean,
+      default: false,
+    },
+    rating: { // For future reviews/ratings feature
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    numReviews: { // For future reviews/ratings feature
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    // Consider adding 'weight', 'dimensions' for shipping if needed
   },
-  { timestamps: true }
+  {
+    timestamps: true, // Adds createdAt and updatedAt fields
+  }
 );
 
-// Optional: Pre-save hook or helper for calculating average rating if reviews are updated frequently
-productSchema.methods.updateAverageRating = function() {
-    if (this.reviews.length > 0) {
-        const totalRating = this.reviews.reduce((acc, item) => item.rating + acc, 0);
-        this.rating = totalRating / this.reviews.length;
-    } else {
-        this.rating = 0;
-    }
-    this.numReviews = this.reviews.length;
-};
-
-const Product = mongoose.model('Product', productSchema);
-module.exports = Product;
+module.exports = mongoose.model('Product', productSchema);

@@ -1,53 +1,45 @@
+// routes/uploadRoutes.js
+// Assume you have multer and cloudinary config set up
 const express = require('express');
-const multer = require('multer');
-const cloudinary = require('../config/cloudinary');
-const asyncHandler = require('../utils/asyncHandler');
-const { protect, admin } = require('../middleware/authMiddleware');
-
 const router = express.Router();
+const { upload } = require('../middleware/multerUpload'); // Your multer setup
+const cloudinary = require('cloudinary').v2; // Your Cloudinary config
 
-// Configure multer storage (in-memory for Cloudinary upload)
-const storage = multer.memoryStorage(); // Store files in memory buffer
-const upload = multer({
-    storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only image files are allowed!'), false);
-        }
-    },
-});
-
-// @desc    Upload image to Cloudinary
-// @route   POST /api/upload
-// @access  Private/Admin
-router.post('/', protect, admin, upload.single('image'), asyncHandler(async (req, res) => {
-    if (!req.file) {
-        res.status(400);
-        throw new Error('No image file provided');
+// Route for multiple image uploads
+router.post('/images', upload.array('images', 10), async (req, res) => { // 'images' is the field name, 10 is max files
+    if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ message: 'No images uploaded' });
     }
 
+    const uploadedImages = [];
     try {
-        const result = await cloudinary.uploader.upload(
-            `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
-            {
-                folder: 'souk-couture/products', // Folder in Cloudinary
-                // Add any other upload options
-            }
-        );
-
-        res.json({
-            message: 'Image uploaded successfully',
-            imageUrl: result.secure_url,
-            publicId: result.public_id,
-        });
+        for (const file of req.files) {
+            // If using memoryStorage, file.buffer contains the file data
+            const result = await cloudinary.uploader.upload(`data:<span class="math-inline">\{file\.mimetype\};base64,</span>{file.buffer.toString('base64')}`, {
+                folder: 'souk-couture-products', // Your desired Cloudinary folder
+            });
+            uploadedImages.push({
+                url: result.secure_url,
+                public_id: result.public_id,
+            });
+            // No need to delete local file if multer saves to memory
+        }
+        res.status(200).json(uploadedImages); // Return array of objects with url and public_id
     } catch (error) {
         console.error('Cloudinary upload error:', error);
-        res.status(500);
-        throw new Error('Image upload failed');
+        res.status(500).json({ message: 'Image upload failed', error: error.message });
     }
-}));
+});
+
+// Optional: Route for deleting an image from Cloudinary (useful for edits)
+router.delete('/images/:public_id', async (req, res) => {
+    try {
+        await cloudinary.uploader.destroy(req.params.public_id);
+        res.status(200).json({ message: 'Image deleted successfully' });
+    } catch (error) {
+        console.error('Cloudinary delete error:', error);
+        res.status(500).json({ message: 'Image deletion failed', error: error.message });
+    }
+});
 
 module.exports = router;
