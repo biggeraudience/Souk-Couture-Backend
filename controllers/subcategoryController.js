@@ -1,6 +1,7 @@
 const asyncHandler = require('../utils/asyncHandler');
 const Subcategory = require('../models/Subcategory');
 const Category = require('../models/Category'); // We'll need this to validate parent categories
+const mongoose = require('mongoose'); // Add this line
 
 // @desc    Get all subcategories (or filter by category ID)
 // @route   GET /api/subcategories?category=:categoryId
