@@ -32,17 +32,17 @@ const getProducts = asyncHandler(async (req, res) => {
     if (subcategory) {
         // Assuming subcategory might come as a name or ID.
         // Prefer looking up by name first.
-        let subcategoryIdToQuery = subcategory;
+        let subcategoryToQuery = subcategory;
         if (!mongoose.Types.ObjectId.isValid(subcategory)) { // Check if it's not already an ID
             const subcategoryObj = await Subcategory.findOne({ name: subcategory });
             if (subcategoryObj) {
-                subcategoryIdToQuery = subcategoryObj._id;
+                subcategoryToQuery = subcategoryObj._id;
             } else {
                 // If not found by name and not a valid ID, set to null to prevent matches
-                subcategoryIdToQuery = null;
+                subcategoryToQuery = null;
             }
         }
-        query.subcategory = subcategoryIdToQuery;
+        query.subcategory = subcategoryToQuery;
     }
     // --- END ADDED ---
 
