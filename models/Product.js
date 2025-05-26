@@ -30,6 +30,11 @@ const productSchema = mongoose.Schema(
       required: true,
       ref: 'Category',
     },
+     subcategory: { // <--- CHANGE THIS FIELD
+      type: mongoose.Schema.Types.ObjectId, // Now it's an ObjectId
+      required: true,
+      ref: 'Subcategory', // References the new Subcategory model
+    },
     gender: { // Crucial for filtering categories and products
       type: String,
       enum: ['men', 'women', 'unisex'],

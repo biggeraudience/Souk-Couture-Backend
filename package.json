@@ -5,7 +5,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "data:import": "node data/categoriesSeeder.js",
-    "data:destroy": "node data/categoriesSeeder.js -d"
+    "data:destroy": "node data/categoriesSeeder.js -d",
+    "data:import-subcategories": "node data/subcategoriesSeeder.js",
+    "data:destroy-subcategories": "node data/subcategoriesSeeder.js -d" 
   },
   "keywords": [],
   "author": "",

@@ -101,7 +101,7 @@ const adminUserRoutes = require('./routes/admin/adminUserRoutes');
 const adminOrderRoutes = require('./routes/admin/adminOrderRoutes');
 const adminPromoRoutes = require('./routes/admin/adminPromoRoutes');
 const adminMessageRoutes = require('./routes/admin/adminMessageRoutes');
-
+const subcategoryRoutes = require('./routes/subcategoryRoutes');
 app.get('/', (req, res) => {
   res.send('Souk Couture Backend API is running!');
 });
@@ -114,6 +114,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/subcategories', subcategoryRoutes); 
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/favorites', favoriteRoutes);
