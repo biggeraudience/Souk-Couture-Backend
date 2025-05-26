@@ -283,7 +283,7 @@ module.exports = {
     createProduct,
     updateProduct,
     deleteProduct,
-    getAdminProducts, // Export new function for admin product list
+    getAdminProducts, 
     getAllOrders,
     updateOrderStatus,
     createPromotion,
