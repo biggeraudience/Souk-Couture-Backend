@@ -1,50 +1,42 @@
+// controllers/productController.js
 const asyncHandler = require('express-async-handler');
 const Product = require('../models/Product');
-const Category = require('../models/Category'); // Assuming you have a Category model for category lookup
-const Subcategory = require('../models/Subcategory'); // Assuming you have a Subcategory model for subcategory lookup
-const mongoose = require('mongoose'); // Import mongoose for ObjectId validation
+const Category = require('../models/Category');
+const Subcategory = require('../models/Subcategory');
+const mongoose = require('mongoose');
 
 // @desc    Fetch all products (public)
 // @route   GET /api/products
 // @access  Public
 const getProducts = asyncHandler(async (req, res) => {
-    // Implement filtering and sorting via query parameters here for efficiency
-    const { category, subcategory, gender, priceRange, sort, keyword } = req.query; // Added subcategory to destructuring
-    let query = { isArchived: false }; // Only show non-archived products publicly
+    const { category, subcategory, gender, priceRange, sort, keyword } = req.query;
+    let query = { isArchived: false };
 
     if (gender && ['men', 'women', 'unisex'].includes(gender)) {
         query.gender = gender;
     }
 
-    if (category) {
-        // You'll need to find the category ID from its name
+    if (category && category !== 'All') { // Added 'All' check
         const categoryObj = await Category.findOne({ name: category });
         if (categoryObj) {
             query.category = categoryObj._id;
         } else {
-            // If category name doesn't match, ensure we don't return products
-            // Or handle as an invalid category query
-            query.category = null; // Forces no match if category name isn't found
+            query.category = null;
         }
     }
 
-    // --- ADDED: Subcategory filter ---
-    if (subcategory) {
-        // Assuming subcategory might come as a name or ID.
-        // Prefer looking up by name first.
+    if (subcategory && subcategory !== 'All') { // Added 'All' check
         let subcategoryToQuery = subcategory;
-        if (!mongoose.Types.ObjectId.isValid(subcategory)) { // Check if it's not already an ID
+        if (!mongoose.Types.ObjectId.isValid(subcategory)) {
             const subcategoryObj = await Subcategory.findOne({ name: subcategory });
             if (subcategoryObj) {
                 subcategoryToQuery = subcategoryObj._id;
             } else {
-                // If not found by name and not a valid ID, set to null to prevent matches
-                subcategoryToQuery = null;
+                subcategoryToQuery = null; // If not found by name and not a valid ID, set to null
             }
         }
         query.subcategory = subcategoryToQuery;
     }
-    // --- END ADDED ---
 
     if (priceRange) {
         const [min, max] = priceRange.split('-').map(Number);
@@ -60,16 +52,12 @@ const getProducts = asyncHandler(async (req, res) => {
             { name: { $regex: keyword, $options: 'i' } },
             { description: { $regex: keyword, $options: 'i' } },
             { brand: { $regex: keyword, $options: 'i' } },
-            // If you want to search subcategory name with keyword, you'd need to
-            // populate subcategory first and then filter, or consider denormalizing
-            // the subcategory name into the product document for easier querying.
         ];
     }
 
-    // Populate both category and subcategory
     let products = await Product.find(query)
         .populate('category', 'name gender')
-        .populate('subcategory', 'name'); // Populate subcategory name
+        .populate('subcategory', 'name');
 
     // Server-side sorting
     if (sort) {
@@ -82,7 +70,6 @@ const getProducts = asyncHandler(async (req, res) => {
         } else if (sort === 'name_desc') {
             products.sort((a, b) => b.name.localeCompare(a.name));
         }
-        // Add other sorting options as needed
     }
 
     res.json(products);
@@ -224,8 +211,8 @@ const updateProduct = asyncHandler(async (req, res) => {
     // Server-side validation for required fields (for updates, only if they are changed)
     // If a field is being updated, it must be valid. If it's not provided, keep existing.
     if (name === '' || description === '' || categoryId === '' || subcategory === '' || gender === '' || price === '' || stock === '' || sizes === '' || colors === '' || images === '') {
-         res.status(400);
-         throw new Error('Required product fields cannot be empty strings.');
+        res.status(400);
+        throw new Error('Required product fields cannot be empty strings.');
     }
 
     // Validate categoryId and subcategory if they are provided in the update payload
