@@ -77,7 +77,11 @@ const getProducts = asyncHandler(async (req, res) => {
     console.log('Constructed MongoDB Query Filters:', query);
     // console.log('Number of products matching filters:', await Product.countDocuments(query));
     // --- End Debugging logs ---
+      // Debug logs
+    console.log('🕵️ req.query:', req.query);
+    console.log('🕵️ Mongo filters:', JSON.stringify(query));
 
+    
     let products = await Product.find(query)
         .populate('category', 'name gender')
         .populate('subcategory', 'name');
