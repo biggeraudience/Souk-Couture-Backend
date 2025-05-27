@@ -1,4 +1,3 @@
-// controllers/productController.js
 const asyncHandler = require('express-async-handler');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
@@ -10,33 +9,51 @@ const mongoose = require('mongoose');
 // @access  Public
 const getProducts = asyncHandler(async (req, res) => {
     const { category, subcategory, gender, priceRange, sort, keyword } = req.query;
-    let query = { isArchived: false };
+    let query = { isArchived: false }; // Base query to exclude archived products
 
-    if (gender && ['men', 'women', 'unisex'].includes(gender)) {
-        query.gender = gender;
+    // --- Start of suggested filter improvements ---
+
+    // Gender filter (already robust due to enum, but adding case-insensitivity for consistency)
+    if (gender) {
+        // Ensuring gender is one of the allowed values
+        if (['men', 'women', 'unisex'].includes(gender.toLowerCase())) {
+            query.gender = gender.toLowerCase(); // Store/query in lowercase to match enum
+        }
     }
 
-    if (category && category !== 'All') { // Added 'All' check
-        const categoryObj = await Category.findOne({ name: category });
+    // Category filter
+    if (category && category !== 'All') {
+        // Use case-insensitive regex for finding the category name
+        const categoryObj = await Category.findOne({ name: { $regex: new RegExp(`^${category.trim()}$`, 'i') } });
         if (categoryObj) {
             query.category = categoryObj._id;
         } else {
+            // If category not found, ensure no products match this non-existent category
             query.category = null;
         }
     }
 
-    if (subcategory && subcategory !== 'All') { // Added 'All' check
-        let subcategoryToQuery = subcategory;
-        if (!mongoose.Types.ObjectId.isValid(subcategory)) {
-            const subcategoryObj = await Subcategory.findOne({ name: subcategory });
+    // Subcategory filter
+    if (subcategory && subcategory !== 'All') {
+        let subcategoryToQuery = subcategory.trim(); // Trim whitespace from incoming subcategory
+        
+        // Check if it's a valid ObjectId first (e.g., if direct ID is passed from elsewhere)
+        if (mongoose.Types.ObjectId.isValid(subcategoryToQuery)) {
+            // If it's a valid ObjectId, use it directly
+            query.subcategory = subcategoryToQuery;
+        } else {
+            // If not a valid ObjectId, search by name with case-insensitivity
+            const subcategoryObj = await Subcategory.findOne({ name: { $regex: new RegExp(`^${subcategoryToQuery}$`, 'i') } });
             if (subcategoryObj) {
-                subcategoryToQuery = subcategoryObj._id;
+                query.subcategory = subcategoryObj._id;
             } else {
-                subcategoryToQuery = null; // If not found by name and not a valid ID, set to null
+                // If subcategory not found by name, ensure no products match
+                query.subcategory = null;
             }
         }
-        query.subcategory = subcategoryToQuery;
     }
+    // --- End of suggested filter improvements ---
+
 
     if (priceRange) {
         const [min, max] = priceRange.split('-').map(Number);
@@ -48,12 +65,18 @@ const getProducts = asyncHandler(async (req, res) => {
     }
 
     if (keyword) {
+        // Apply keyword search across name, description, brand with case-insensitivity
         query.$or = [
             { name: { $regex: keyword, $options: 'i' } },
             { description: { $regex: keyword, $options: 'i' } },
             { brand: { $regex: keyword, $options: 'i' } },
         ];
     }
+
+    // --- Debugging logs (as per your suggestion) ---
+    console.log('Constructed MongoDB Query Filters:', query);
+    // console.log('Number of products matching filters:', await Product.countDocuments(query));
+    // --- End Debugging logs ---
 
     let products = await Product.find(query)
         .populate('category', 'name gender')
