@@ -78,13 +78,23 @@ const getProducts = asyncHandler(async (req, res) => {
     // console.log('Number of products matching filters:', await Product.countDocuments(query));
     // --- End Debugging logs ---
       // Debug logs
-    console.log('🕵️ req.query:', req.query);
-    console.log('🕵️ Mongo filters:', JSON.stringify(query));
+        // … your category / subcategory / gender / priceRange / keyword logic …
 
-    
+    // === DEBUG SWITCH ===
+    if (req.query.debug === 'true') {
+      const matched = await Product.find(query);
+      return res.json({
+        reqQuery: req.query,
+        mongoQuery: query,
+        matchedCount: matched.length,
+      });
+    }
+    // =====================
+
     let products = await Product.find(query)
-        .populate('category', 'name gender')
-        .populate('subcategory', 'name');
+      .populate('category','name gender')
+      .populate('subcategory','name');
+
 
     // Server-side sorting
     if (sort) {
