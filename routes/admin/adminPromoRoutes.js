@@ -4,7 +4,7 @@ const { protect, admin } = require('../../middleware/authMiddleware');
 const { createPromotion, getPromotions } = require('../../controllers/adminController');
 
 router.route('/')
-    .post(protect, admin, createPromotion) // Create a new promotion
-    .get(protect, admin, getPromotions); // Get all promotions
+    .post(protect, admin, createPromotion) 
+    .get(protect, admin, getPromotions); 
 
 module.exports = router;

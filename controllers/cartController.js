@@ -1,24 +1,20 @@
 const asyncHandler = require('../utils/asyncHandler');
 const Cart = require('../models/Cart');
-const Product = require('../models/Product'); // To fetch product details and validate
+const Product = require('../models/Product'); 
 
-// @desc    Get user's cart
-// @route   GET /api/cart
-// @access  Private
+
 const getCart = asyncHandler(async (req, res) => {
     const cart = await Cart.findOne({ user: req.user._id }).populate('items.product', 'name images price');
 
     if (cart) {
         res.json(cart);
     } else {
-        // If cart doesn't exist for the user, return an empty cart
+      
         res.json({ user: req.user._id, items: [], totalQuantity: 0, totalPrice: 0 });
     }
 });
 
-// @desc    Add item to cart
-// @route   POST /api/cart/add
-// @access  Private
+
 const addItemToCart = asyncHandler(async (req, res) => {
     const { productId, quantity, selectedSize, selectedColors } = req.body;
 
@@ -37,7 +33,7 @@ const addItemToCart = asyncHandler(async (req, res) => {
     let cart = await Cart.findOne({ user: req.user._id });
 
     if (!cart) {
-        // Create a new cart if one doesn't exist for the user
+      
         cart = new Cart({
             user: req.user._id,
             items: [],
@@ -46,7 +42,7 @@ const addItemToCart = asyncHandler(async (req, res) => {
         });
     }
 
-    // Check if the item already exists in the cart with the same size and colors
+
     const existingItemIndex = cart.items.findIndex(
         (item) =>
             item.product.toString() === productId &&
@@ -55,14 +51,14 @@ const addItemToCart = asyncHandler(async (req, res) => {
     );
 
     if (existingItemIndex > -1) {
-        // Update quantity of existing item
+      
         cart.items[existingItemIndex].quantity += quantity;
     } else {
-        // Add new item to cart
+       
         cart.items.push({
             product: productId,
             name: product.name,
-            images: product.images, // Assuming products have an images array
+            images: product.images, 
             price: product.price,
             selectedSize,
             selectedColors: selectedColors || [],
@@ -74,9 +70,7 @@ const addItemToCart = asyncHandler(async (req, res) => {
     res.status(200).json(updatedCart);
 });
 
-// @desc    Update cart item quantity
-// @route   PUT /api/cart/update
-// @access  Private
+
 const updateCartItemQuantity = asyncHandler(async (req, res) => {
     const { productId, quantity, selectedSize, selectedColors } = req.body;
 
@@ -109,11 +103,9 @@ const updateCartItemQuantity = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    Remove item from cart
-// @route   DELETE /api/cart/remove
-// @access  Private
+
 const removeItemFromCart = asyncHandler(async (req, res) => {
-    const { productId, selectedSize, selectedColors } = req.body; // Expecting these in the body for specific item removal
+    const { productId, selectedSize, selectedColors } = req.body; 
 
     if (!productId || !selectedSize) {
         res.status(400);
@@ -146,9 +138,7 @@ const removeItemFromCart = asyncHandler(async (req, res) => {
     res.status(200).json(updatedCart);
 });
 
-// @desc    Clear user's cart
-// @route   DELETE /api/cart/clear
-// @access  Private
+
 const clearCart = asyncHandler(async (req, res) => {
     const cart = await Cart.findOne({ user: req.user._id });
 

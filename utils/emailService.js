@@ -1,14 +1,15 @@
+//send email service
 const { Resend } = require('resend');
 const dotenv = require('dotenv');
 
-dotenv.config(); // Ensure dotenv is configured to access RESEND_API_KEY
+dotenv.config(); 
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const SENDER_EMAIL = process.env.RESEND_SENDER_EMAIL;
 
 if (!process.env.RESEND_API_KEY || !process.env.RESEND_SENDER_EMAIL) {
     console.error('RESEND_API_KEY or RESEND_SENDER_EMAIL is not set in environment variables.');
-    // Optionally, throw an error or handle this more gracefully depending on your app's needs
+
 }
 
 const sendEmail = async ({ to, subject, html, text }) => {
@@ -19,11 +20,11 @@ const sendEmail = async ({ to, subject, html, text }) => {
 
     try {
         const { data, error } = await resend.emails.send({
-            from: `Souk Couture <${SENDER_EMAIL}>`, // Display name <email@domain.com>
+            from: `Souk Couture <${SENDER_EMAIL}>`,
             to: to,
             subject: subject,
             html: html,
-            text: text, // Plain text fallback
+            text: text, 
         });
 
         if (error) {
@@ -35,7 +36,7 @@ const sendEmail = async ({ to, subject, html, text }) => {
         return { success: true, data: data };
 
     } catch (err) {
-        console.error('Caught exception during email sending:', err);
+        console.error('Caught exception sending email:', err);
         return { success: false, message: err.message || 'An unexpected error occurred during email sending.' };
     }
 };

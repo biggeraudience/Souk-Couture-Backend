@@ -7,7 +7,7 @@ const {
     updateCartItemQuantity,
     removeItemFromCart,
     clearCart,
-} = require('../controllers/cartController'); // Will create this controller next
+} = require('../controllers/cartController'); 
 
 router.route('/').get(protect, getCart);
 router.post('/add', protect, addItemToCart);

@@ -7,7 +7,7 @@ const messageSchema = mongoose.Schema(
         subject: { type: String, required: true },
         messageBody: { type: String, required: true },
         status: { type: String, enum: ['new', 'read', 'replied', 'archived'], default: 'new' },
-        replyMessage: { type: String }, // For admin replies
+        replyMessage: { type: String }, 
         repliedAt: { type: Date },
     },
     { timestamps: true }

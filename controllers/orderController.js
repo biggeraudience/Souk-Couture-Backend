@@ -1,13 +1,11 @@
 const asyncHandler = require('../utils/asyncHandler');
 const Order = require('../models/Order');
-const User = require('../models/User'); // Assuming you might need user details
-const Product = require('../models/Product'); // To check product stock, etc.
-const Cart = require('../models/Cart'); // To clear cart after order
-const sendEmail = require('../utils/emailService'); // Import the email service
+const User = require('../models/User'); 
+const Product = require('../models/Product'); 
+const Cart = require('../models/Cart'); 
+const sendEmail = require('../utils/emailService'); 
 
-// @desc    Create new order
-// @route   POST /api/orders
-// @access  Private
+
 const createOrder = asyncHandler(async (req, res) => {
     const {
         orderItems,
@@ -22,37 +20,34 @@ const createOrder = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error('No order items');
     } else {
-        // Here you would typically:
-        // 1. Validate product existence and stock
-        // 2. Calculate prices on the backend to prevent tampering
-        // 3. Create the order in the database
+  
 
         const order = new Order({
             user: req.user._id,
             orderItems: orderItems.map(item => ({
                 ...item,
-                product: item._id, // Map frontend _id to backend product field
-                _id: undefined, // Remove frontend _id from subdocument
+                product: item._id, 
+                _id: undefined, 
             })),
             shippingAddress,
             paymentMethod,
             taxPrice,
             shippingPrice,
             totalPrice,
-            isPaid: false, // Will be updated by payment gateway webhook/verification
+            isPaid: false, 
             paidAt: null,
             isDelivered: false,
             deliveredAt: null,
-            status: 'pending', // Initial status
+            status: 'pending', 
         });
 
         const createdOrder = await order.save();
 
-        // Optionally, clear the user's cart after creating the order
+        
         await Cart.deleteOne({ user: req.user._id });
 
-        // --- Send Order Confirmation Email ---
-        const user = await User.findById(req.user._id); // Fetch user for email
+      
+        const user = await User.findById(req.user._id); 
 
         if (user) {
             const orderConfirmationSubject = `Your Souk Couture Order #${createdOrder._id} has been placed!`;
@@ -107,28 +102,24 @@ const createOrder = asyncHandler(async (req, res) => {
                 text: orderConfirmationText,
             });
         }
-        // ------------------------------------
+    
 
         res.status(201).json(createdOrder);
     }
 });
 
-// @desc    Get user orders
-// @route   GET /api/orders
-// @access  Private
+
 const getUserOrders = asyncHandler(async (req, res) => {
     const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
     res.json(orders);
 });
 
-// @desc    Get order by ID
-// @route   GET /api/orders/:id
-// @access  Private
+
 const getOrderById = asyncHandler(async (req, res) => {
     const order = await Order.findById(req.params.id).populate('user', 'name email');
 
     if (order) {
-        // Ensure only the user who owns the order or an admin can view it
+        
         if (order.user._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
             res.status(401);
             throw new Error('Not authorized to view this order');
@@ -140,23 +131,21 @@ const getOrderById = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    Update order to paid (triggered by payment gateway webhook/verification)
-// @route   PUT /api/orders/:id/pay
-// @access  Private (but ideally handled by webhook, or by verification in paymentController)
+
 const updateOrderToPaid = asyncHandler(async (req, res) => {
     const order = await Order.findById(req.params.id);
 
     if (order) {
         order.isPaid = true;
-        order.paidAt = req.body.paidAt || Date.now(); // Changed from Date.body.paidAt
+        order.paidAt = req.body.paidAt || Date.now(); 
         order.paymentResult = {
             id: req.body.id,
             status: req.body.status,
             update_time: req.body.update_time,
             email_address: req.body.email_address,
-            reference: req.body.reference, // Custom for Paystack/Flutterwave
+            reference: req.body.reference, 
         };
-        order.status = 'processing'; // Change status after payment
+        order.status = 'processing'; 
 
         const updatedOrder = await order.save();
 

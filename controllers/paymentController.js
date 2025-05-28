@@ -1,11 +1,9 @@
 const asyncHandler = require('../utils/asyncHandler');
 const Order = require('../models/Order');
-const axios = require('axios'); // For making HTTP requests to Flutterwave API
-const crypto = require('crypto'); // For webhook signature verification
+const axios = require('axios'); 
+const crypto = require('crypto'); 
 
-// @desc    Initialize Flutterwave Payment
-// @route   POST /api/payments/flutterwave/initialize
-// @access  Private
+
 const initializeFlutterwavePayment = asyncHandler(async (req, res) => {
     const { orderId } = req.body;
     const user = req.user;
@@ -27,7 +25,7 @@ const initializeFlutterwavePayment = asyncHandler(async (req, res) => {
         throw new Error('Order already paid');
     }
 
-    // Generate a unique transaction reference
+  
     const txRef = `SOUKCOUTURE_${order._id.toString()}_${Date.now()}`;
 
     try {
@@ -40,15 +38,15 @@ const initializeFlutterwavePayment = asyncHandler(async (req, res) => {
                 redirect_url: `${process.env.FRONTEND_URL.split(',')[0]}/order/${orderId}/payment-success?tx_ref=${txRef}`, // Use the first URL from comma-separated list
                 customer: {
                     email: user.email,
-                    phonenumber: user.phoneNumber || 'N/A', // Add phone number to User model if available
+                    phonenumber: user.phoneNumber || 'N/A', 
                     name: user.name,
                 },
                 customizations: {
                     title: 'Souk Couture Payment',
                     description: `Payment for Order ${order._id}`,
-                    logo: 'https://your-logo-url.com/logo.png', // Replace with your actual logo URL
+                    logo: 'https://your-logo-url.com/logo.png', 
                 },
-                meta: { // Custom metadata for reconciliation
+                meta: { 
                     order_id: order._id.toString(),
                     user_id: user._id.toString(),
                 },
@@ -64,7 +62,7 @@ const initializeFlutterwavePayment = asyncHandler(async (req, res) => {
         if (flutterwaveResponse.data && flutterwaveResponse.data.status === 'success') {
             res.json({
                 status: 'success',
-                link: flutterwaveResponse.data.data.link, // Contains the payment page URL
+                link: flutterwaveResponse.data.data.link, 
             });
         } else {
             res.status(400);
@@ -78,9 +76,7 @@ const initializeFlutterwavePayment = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    Verify Flutterwave Payment (after callback from frontend)
-// @route   GET /api/payments/flutterwave/verify/:txRef
-// @access  Private
+
 const verifyFlutterwavePayment = asyncHandler(async (req, res) => {
     const { txRef } = req.params;
     const user = req.user;
@@ -92,7 +88,7 @@ const verifyFlutterwavePayment = asyncHandler(async (req, res) => {
 
     try {
         const flutterwaveResponse = await axios.get(
-            `https://api.flutterwave.com/v3/transactions/${txRef}/verify`, // Endpoint to verify by tx_ref
+            `https://api.flutterwave.com/v3/transactions/${txRef}/verify`, 
             {
                 headers: {
                     Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
@@ -121,14 +117,14 @@ const verifyFlutterwavePayment = asyncHandler(async (req, res) => {
                 throw new Error('Order already paid');
             }
 
-            // Verify amount to prevent tampering (CRITICAL SECURITY STEP)
+            
             if (data.currency !== 'NGN' || data.amount !== order.totalPrice) {
                  console.warn(`Amount mismatch for order ${orderId}. Expected: ${order.totalPrice}, Received: ${data.amount}. Transaction Reference: ${txRef}`);
                  res.status(400);
                  throw new Error('Payment amount mismatch or currency not NGN. Possible fraud attempt.');
             }
 
-            // Update order details
+            
             order.isPaid = true;
             order.paidAt = Date.now();
             order.paymentMethod = 'Flutterwave';
@@ -136,11 +132,11 @@ const verifyFlutterwavePayment = asyncHandler(async (req, res) => {
                 id: data.id,
                 status: data.status,
                 reference: data.tx_ref,
-                channel: data.payment_type, // e.g., 'card', 'bank_transfer'
+                channel: data.payment_type, 
                 amount: data.amount,
                 currency: data.currency,
                 email_address: data.customer.email,
-                paidAt: data.created_at, // Use their created_at as paidAt
+                paidAt: data.created_at, 
             };
             order.status = 'processing';
 
@@ -163,12 +159,10 @@ const verifyFlutterwavePayment = asyncHandler(async (req, res) => {
 });
 
 
-// @desc    Handle Flutterwave Webhook events
-// @route   POST /api/payments/flutterwave/webhook
-// @access  Public (Flutterwave servers)
+
 const flutterwaveWebhookHandler = asyncHandler(async (req, res) => {
-    // 1. Validate signature hash
-    const hash = req.headers['verif-hash']; // Flutterwave sends this in the header
+  
+    const hash = req.headers['verif-hash']; 
     if (!hash) {
         console.warn('Webhook: Missing verif-hash header.');
         return res.status(401).send('Unauthorized');
@@ -179,13 +173,13 @@ const flutterwaveWebhookHandler = asyncHandler(async (req, res) => {
         return res.status(400).send('Invalid signature');
     }
 
-    // 2. Process event
+  
     const event = req.body;
     console.log('Flutterwave Webhook Event Received:', event.event);
 
     switch (event.event) {
         case 'charge.completed':
-        case 'transfer.completed': // Often used for bank transfers, etc.
+        case 'transfer.completed': 
             const data = event.data;
             const orderId = data.meta ? data.meta.order_id : null;
 
@@ -194,9 +188,9 @@ const flutterwaveWebhookHandler = asyncHandler(async (req, res) => {
                 return res.status(400).send('Order ID missing');
             }
 
-            // Re-verify the transaction using the transaction ID (recommended by Flutterwave for security)
+         
             const verifyResponse = await axios.get(
-                `https://api.flutterwave.com/v3/transactions/${data.id}/verify`, // Verify by Flutterwave transaction ID
+                `https://api.flutterwave.com/v3/transactions/${data.id}/verify`, 
                 {
                     headers: {
                         Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
@@ -218,10 +212,10 @@ const flutterwaveWebhookHandler = asyncHandler(async (req, res) => {
                     return res.status(200).send('Order already paid');
                 }
 
-                // Update order status based on webhook
+               
                 order.isPaid = true;
                 order.paidAt = Date.now();
-                order.paymentMethod = 'Flutterwave'; // Explicitly set for webhook
+                order.paymentMethod = 'Flutterwave'; 
                 order.paymentResult = {
                     id: verifiedData.id,
                     status: verifiedData.status,
@@ -243,14 +237,13 @@ const flutterwaveWebhookHandler = asyncHandler(async (req, res) => {
         case 'charge.failed':
         case 'transfer.failed':
             console.log('Payment or Transfer failed:', event.data.tx_ref, event.data.status, event.data.processor_response);
-            // You might want to update the order status to 'failed' here
-            // Or notify an admin
+         
             break;
         case 'transaction.dispute':
             console.log('Dispute received for transaction:', event.data.tx_ref);
-            // Handle disputes - notify admin, etc.
+          
             break;
-        // Add more cases for other events you might want to handle (e.g., refund events)
+      
         default:
             console.log(`Unhandled Flutterwave event type: ${event.event}`);
     }

@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const productSchema = mongoose.Schema(
   {
-    user: { // The admin who created the product
+    user: { 
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: 'User',
@@ -17,25 +17,25 @@ const productSchema = mongoose.Schema(
     },
     brand: {
       type: String,
-      required: false, // Make optional if some products don't have a specific brand
+      required: false, 
     },
-    sku: { // Stock Keeping Unit - unique identifier for tracking
+    sku: { 
       type: String,
       unique: true,
-      sparse: true, // Allows null values, so products without SKU won't cause error
+      sparse: true, 
       required: false,
     },
-    category: { // Reference to Category model
+    category: { 
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: 'Category',
     },
-     subcategory: { // <--- CHANGE THIS FIELD
-      type: mongoose.Schema.Types.ObjectId, // Now it's an ObjectId
+     subcategory: { 
+      type: mongoose.Schema.Types.ObjectId, 
       required: true,
-      ref: 'Subcategory', // References the new Subcategory model
+      ref: 'Subcategory', 
     },
-    gender: { // Crucial for filtering categories and products
+    gender: { 
       type: String,
       enum: ['men', 'women', 'unisex'],
       required: true,
@@ -45,7 +45,7 @@ const productSchema = mongoose.Schema(
       required: true,
       default: 0,
     },
-    salePrice: { // Optional: for sales/discounts
+    salePrice: { 
       type: Number,
       default: null,
     },
@@ -53,32 +53,31 @@ const productSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    images: [ // Array of Cloudinary URLs
+    images: [ 
       {
         url: { type: String, required: true },
         public_id: { type: String, required: true },
       },
     ],
-    // You might want a 'thumbnail' or 'mainImage' field if you need a specific one for product cards
-    // mainImage: { url: String, public_id: String },
+  
     stock: {
       type: Number,
       required: true,
       default: 0,
     },
-    sizes: [ // Array of available sizes (e.g., ['S', 'M', 'L'] or ['7', '8', '9'])
+    sizes: [
       {
         type: String,
         required: true,
       }
     ],
-    colors: [ // Array of available colors (e.g., ['Black', 'Blue'])
+    colors: [ 
       {
         type: String,
         required: true,
       }
     ],
-    materials: [ // Array of materials (e.g., ['Cotton', 'Leather'])
+    materials: [
       {
         type: String,
         required: false,
@@ -88,28 +87,28 @@ const productSchema = mongoose.Schema(
       type: String,
       required: false,
     },
-    isFeatured: { // For showcasing on homepage or specific sections
+    isFeatured: { 
       type: Boolean,
       default: false,
     },
-    isArchived: { // Soft delete: hides product from public view but retains data
+    isArchived: { 
       type: Boolean,
       default: false,
     },
-    rating: { // For future reviews/ratings feature
+    rating: { 
       type: Number,
       required: true,
       default: 0,
     },
-    numReviews: { // For future reviews/ratings feature
+    numReviews: { 
       type: Number,
       required: true,
       default: 0,
     },
-    // Consider adding 'weight', 'dimensions' for shipping if needed
+    
   },
   {
-    timestamps: true, // Adds createdAt and updatedAt fields
+    timestamps: true, 
   }
 );
 

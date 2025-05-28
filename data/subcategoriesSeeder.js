@@ -1,11 +1,10 @@
-// src/seeders/subcategorySeeder.js
-// Ensure dotenv loads your MONGODB_URI
+
 require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 const mongoose = require('mongoose');
-const Category = require('../models/Category'); // Need this to get category IDs
-const Subcategory = require('../models/Subcategory'); // Your new Subcategory model
+const Category = require('../models/Category'); 
+const Subcategory = require('../models/Subcategory'); 
 
-// Connect to MongoDB function (re-used from category seeder)
+
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
@@ -16,10 +15,10 @@ const connectDB = async () => {
   }
 };
 
-// Function to safely drop a specific index
+
 const dropSpecificIndex = async (collectionName, indexName) => {
   try {
-    // Get the collection object
+   
     const collection = mongoose.connection.db.collection(collectionName);
     const indexes = await collection.indexes();
 
@@ -32,13 +31,12 @@ const dropSpecificIndex = async (collectionName, indexName) => {
       console.log(`Index '${indexName}' not found on collection '${collectionName}'. No action needed.`);
     }
   } catch (error) {
-    // Handle cases where index might be in use or other errors
+ 
     if (error.codeName === 'IndexNotFound') {
       console.log(`Index '${indexName}' was already removed or never existed. No action needed.`);
     } else {
       console.error(`Error dropping index '${indexName}': ${error.message}`);
-      // Decide if you want to exit or continue based on severity
-      // For this script, we can probably continue if it's just an index error
+ 
     }
   }
 };
@@ -48,22 +46,19 @@ const importData = async () => {
   await connectDB();
 
   try {
-    // STEP 1: (NEW) Drop the old 'name_1' unique index if it exists
-    // This is crucial to allow duplicate subcategory names across different parent categories.
+
     await dropSpecificIndex('subcategories', 'name_1');
 
-    // STEP 2: Clear existing subcategories to prevent duplicates on re-run
     await Subcategory.deleteMany({});
     console.log('Existing subcategories cleared.');
 
-    // Fetch all existing categories to get their IDs
     const categories = await Category.find({});
     if (categories.length === 0) {
       console.error('No categories found. Please run the category seeder first!');
       process.exit(1);
     }
 
-    // Create a map from category name to category ID for easy lookup
+  
     const categoryMap = {};
     categories.forEach(cat => {
       categoryMap[cat.name] = cat._id;
@@ -71,9 +66,7 @@ const importData = async () => {
 
     const subcategoriesToInsert = [];
 
-    // Define your subcategory data.
-    // IMPORTANT: The keys here MUST match the exact 'name' of your categories
-    // as they were seeded (e.g., "Men's Clothing", "Women's Clothing").
+
     const subcategoriesDefinition = {
       "Men's Clothing": [
         { name: 'Kaftan', description: 'Traditional kaftans' },
@@ -83,7 +76,7 @@ const importData = async () => {
         { name: 'Sets', description: 'Matching top and bottom outfits' },
       ],
       "Men's Shoes": [
-        { name: 'Sandals', description: 'Open-toed footwear' }, // This will now be allowed
+        { name: 'Sandals', description: 'Open-toed footwear' }, 
         { name: 'Dress Shoes', description: 'Formal footwear' },
         { name: 'Mules', description: 'Casual footwear' },
       ],
@@ -99,7 +92,7 @@ const importData = async () => {
       ],
       "Men's Bags": [
         { name: 'Briefcases', description: 'Bags for carrying documents' },
-        { name: 'Backpacks', description: 'Bags carried on the back' }, // This will now be allowed
+        { name: 'Backpacks', description: 'Bags carried on the back' }, 
         { name: 'Travel Bags', description: 'Bags for journeys' },
       ],
       "Men's Perfumes": [
@@ -127,12 +120,12 @@ const importData = async () => {
         { name: 'Clutches', description: 'Small, strapless bags' },
         { name: 'Totes', description: 'Large, open-top bags' },
         { name: 'Evening Bags', description: 'Bags for formal events' },
-        { name: 'Backpacks', description: 'Bags carried on the back' }, // This will now be allowed
+        { name: 'Backpacks', description: 'Bags carried on the back' }, 
       ],
       "Women's Shoes": [
         { name: 'Heels', description: 'Footwear with elevated heels' },
         { name: 'Flats', description: 'Comfortable flat-soled shoes' },
-        { name: 'Sandals', description: 'Open-toed footwear' }, // This will now be allowed
+        { name: 'Sandals', description: 'Open-toed footwear' }, 
         { name: 'Mules', description: 'Open-heeled casual shoes' },
       ],
       "Women's Perfumes": [
@@ -166,19 +159,17 @@ const importData = async () => {
       ],
     };
 
-    // Iterate through the defined subcategories and prepare them for insertion
     for (const categoryName in subcategoriesDefinition) {
       if (categoryMap[categoryName]) {
         const categoryId = categoryMap[categoryName];
         const subcategories = subcategoriesDefinition[categoryName];
 
-        // Using map and Promise.all to handle potential duplicates more gracefully if many exist
-        // The unique compound index (name + category) will catch actual duplicates before insertion.
+  
         const operations = subcategories.map(sub => {
           return Subcategory.updateOne(
-            { name: sub.name, category: categoryId }, // Filter to find existing subcategory
-            { $set: { name: sub.name, description: sub.description, category: categoryId } }, // Data to update or insert
-            { upsert: true, new: true, setDefaultsOnInsert: true } // Create if not found, return new doc, apply defaults
+            { name: sub.name, category: categoryId }, 
+            { $set: { name: sub.name, description: sub.description, category: categoryId } }, 
+            { upsert: true, new: true, setDefaultsOnInsert: true } 
           );
         });
 
@@ -210,7 +201,6 @@ const destroyData = async () => {
   }
 };
 
-// This allows you to run the script with arguments from the command line
 if (process.argv[2] === '-d') {
   destroyData();
 } else {

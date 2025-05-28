@@ -6,8 +6,8 @@ const {
     getUserOrders,
     getOrderById,
     updateOrderToPaid,
-    // stripeWebhookHandler, // Webhook handler should be on a different route/middleware chain if raw body needed
-} = require('../controllers/orderController'); // Will create this controller next
+  
+} = require('../controllers/orderController'); 
 
 router.route('/').post(protect, createOrder).get(protect, getUserOrders);
 router.route('/:id').get(protect, getOrderById);

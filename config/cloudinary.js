@@ -1,4 +1,3 @@
-// cloudinaryConfig.js or wherever you configure Cloudinary
 const cloudinary = require('cloudinary').v2;
 
 cloudinary.config({
@@ -6,7 +5,7 @@ cloudinary.config({
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
     secure: true,
-    timeout: 120000, // Increase timeout to 120 seconds (2 minutes) for larger files
+    timeout: 120000, 
 });
 
 module.exports = cloudinary;

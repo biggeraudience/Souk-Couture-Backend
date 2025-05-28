@@ -1,10 +1,8 @@
 const asyncHandler = require('../utils/asyncHandler');
 const Favorite = require('../models/Favorite');
-const Product = require('../models/Product'); // Assuming you use this for product details
+const Product = require('../models/Product'); 
 
-// @desc    Get user's favorite products
-// @route   GET /api/favorites
-// @access  Private
+
 const getFavorites = asyncHandler(async (req, res) => {
     const favoriteList = await Favorite.findOne({ user: req.user._id }).populate('items.product', 'name images price description');
 
@@ -15,11 +13,9 @@ const getFavorites = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    Add product to favorites
-// @route   POST /api/favorites
-// @access  Private
-const addFavorite = asyncHandler(async (req, res) => { // Renamed to addFavorite
-    const { productId } = req.body; // Changed to req.body as per route definition
+
+const addFavorite = asyncHandler(async (req, res) => { 
+    const { productId } = req.body; 
 
     if (!productId) {
         res.status(400);
@@ -70,10 +66,8 @@ const addFavorite = asyncHandler(async (req, res) => { // Renamed to addFavorite
     });
 });
 
-// @desc    Remove product from favorites
-// @route   DELETE /api/favorites/:productId
-// @access  Private
-const removeFavorite = asyncHandler(async (req, res) => { // Renamed to removeFavorite
+
+const removeFavorite = asyncHandler(async (req, res) => { 
     const { productId } = req.params;
 
     if (!require('mongoose').Types.ObjectId.isValid(productId)) {
@@ -108,6 +102,6 @@ const removeFavorite = asyncHandler(async (req, res) => { // Renamed to removeFa
 
 module.exports = {
     getFavorites,
-    addFavorite,    // Exporting as addFavorite
-    removeFavorite, // Exporting as removeFavorite
+    addFavorite,    
+    removeFavorite, 
 };

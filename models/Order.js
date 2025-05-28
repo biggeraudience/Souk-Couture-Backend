@@ -46,7 +46,7 @@ const orderSchema = mongoose.Schema(
         paidAt: { type: Date },
         isDelivered: { type: Boolean, required: true, default: false },
         deliveredAt: { type: Date },
-        status: { // Custom status for order tracking
+        status: { 
             type: String,
             enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
             default: 'pending',

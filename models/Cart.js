@@ -7,10 +7,10 @@ const cartItemSchema = mongoose.Schema({
         ref: 'Product',
     },
     name: { type: String, required: true },
-    images: [{ type: String }], // Array of image URLs
+    images: [{ type: String }],
     price: { type: Number, required: true },
     selectedSize: { type: String, required: true },
-    selectedColors: [{ type: String }], // Array of selected colors
+    selectedColors: [{ type: String }], 
     quantity: { type: Number, required: true, default: 1 },
 });
 
@@ -20,14 +20,14 @@ const cartSchema = mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             required: true,
             ref: 'User',
-            unique: true, // Each user has one cart
+            unique: true, 
         },
         items: [cartItemSchema],
     },
     { timestamps: true }
 );
 
-// Virtual for total cart price
+
 cartSchema.virtual('totalPrice').get(function() {
     return this.items.reduce((acc, item) => acc + item.quantity * item.price, 0);
 });

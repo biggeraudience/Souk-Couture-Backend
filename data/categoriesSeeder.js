@@ -1,7 +1,7 @@
-const path = require('path'); // ADD THIS LINE (if not already there)
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') }); // This should be at the very top
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') }); 
 
-// --- ADD THESE DEBUG LINES (if not already there) ---
+
 console.log('Attempting to load MONGODB_URI...');
 if (process.env.MONGODB_URI) {
     console.log('✅ MONGODB_URI loaded successfully (first few chars):', process.env.MONGODB_URI.substring(0, 10) + '...');
@@ -10,13 +10,13 @@ if (process.env.MONGODB_URI) {
     console.error('Current working directory:', process.cwd());
     console.error('Resolved .env path used:', path.resolve(__dirname, '../.env'));
 }
-// --- END DEBUG LINES ---
 
 
-const mongoose = require('mongoose'); // <--- THIS MUST BE HERE, BEFORE connectDB() is defined/called
-const Category = require('../models/Category'); // Adjust path to your Category model
 
-// Your predefined categories matching your Category Schema
+const mongoose = require('mongoose'); 
+const Category = require('../models/Category'); 
+
+
 const categories = [
   { name: 'Men\'s Clothing', gender: 'men', description: 'Traditional and contemporary menswear.' },
   { name: 'Men\'s Shoes', gender: 'men', description: 'Formal and casual footwear for men.' },
@@ -38,7 +38,7 @@ const categories = [
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI); // Use process.env.MONGODB_URI here
+    await mongoose.connect(process.env.MONGODB_URI); 
     console.log('MongoDB Connected for Seeding...');
   } catch (error) {
     console.error(`Error: ${error.message}`);
@@ -47,7 +47,7 @@ const connectDB = async () => {
 };
 
 const importData = async () => {
-  await connectDB(); // Connect to DB first
+  await connectDB(); 
 
   try {
     await Category.deleteMany({});
@@ -63,7 +63,7 @@ const importData = async () => {
 };
 
 const destroyData = async () => {
-  await connectDB(); // Connect to DB first
+  await connectDB(); 
 
   try {
     await Category.deleteMany({});

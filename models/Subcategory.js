@@ -5,7 +5,7 @@ const subcategorySchema = new mongoose.Schema({
     type: String,
     required: [true, 'Subcategory name is required'],
     trim: true,
-    unique: false, // Set to false here because uniqueness will be handled by the compound index
+    unique: false, 
     minlength: [2, 'Subcategory name must be at least 2 characters long'],
     maxlength: [50, 'Subcategory name cannot exceed 50 characters'],
   },
@@ -21,7 +21,7 @@ const subcategorySchema = new mongoose.Schema({
   },
  
 }, {
-  timestamps: true, // Adds createdAt and updatedAt timestamps
+  timestamps: true, 
 });
 
 

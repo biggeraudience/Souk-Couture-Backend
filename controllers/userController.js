@@ -1,9 +1,6 @@
 const asyncHandler = require('../utils/asyncHandler');
 const User = require('../models/User');
 
-// @desc    Get user profile
-// @route   GET /api/users/profile
-// @access  Private
 const getUserProfile = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id).select('-password');
     if (user) {
@@ -20,9 +17,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    Update user profile
-// @route   PUT /api/users/profile
-// @access  Private
+
 const updateUserProfile = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id);
 
@@ -30,9 +25,9 @@ const updateUserProfile = asyncHandler(async (req, res) => {
         user.name = req.body.name || user.name;
         user.email = req.body.email || user.email;
         if (req.body.password) {
-            user.password = req.body.password; // Pre-save hook will hash it
+            user.password = req.body.password; 
         }
-        // Update addresses if provided
+        
         if (req.body.addresses) {
             user.addresses = req.body.addresses;
         }

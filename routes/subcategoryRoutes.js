@@ -7,14 +7,14 @@ const {
     updateSubcategory,
     deleteSubcategory,
 } = require('../controllers/subcategoryController');
-const { protect, admin } = require('../middleware/authMiddleware'); // Assuming you have these
+const { protect, admin } = require('../middleware/authMiddleware'); 
 
-// Public access to view subcategories, and admin to create
+
 router.route('/')
-    .get(getSubcategories) // GET /api/subcategories?category=<categoryId>
+    .get(getSubcategories) 
     .post(protect, admin, createSubcategory);
 
-// Public access to view single subcategory, admin to update/delete
+
 router.route('/:id')
     .get(getSubcategoryById)
     .put(protect, admin, updateSubcategory)

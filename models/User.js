@@ -1,4 +1,3 @@
-// models/User.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -33,8 +32,8 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 
 userSchema.methods.generateAuthToken = function () {
     return jwt.sign({ id: this._id, role: this.role }, process.env.JWT_SECRET, {
-        expiresIn: '55m', // Changed for quicker testing (5 minutes)
-        // For production, change to '1h' or '2h' for better security vs. UX balance
+        expiresIn: '55m', 
+     
     });
 };
 

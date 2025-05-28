@@ -1,16 +1,15 @@
-// server.js
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const morgan = require('morgan'); // Adding morgan for logging requests, useful for debugging
+const morgan = require('morgan');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const { flutterwaveWebhookHandler } = require('./controllers/paymentController');
 const User = require('./models/User');
 
 const {
-  PORT = 5000, // Render provides this, fallback to 5000
+  PORT = 5000, 
   MONGODB_URI, 
   JWT_SECRET,
   FRONTEND_URL,
@@ -22,7 +21,7 @@ const {
 
 if (!MONGODB_URI) {
   console.error('❌ CRITICAL ERROR: MONGODB_URI is UNDEFINED. Cannot connect to MongoDB.');
-  process.exit(1); // Exit the process if the database URI is missing
+  process.exit(1);
 }
 
 if (!JWT_SECRET) {
@@ -35,7 +34,7 @@ if (!FRONTEND_URL) {
 
 const app = express();
 
-const allowedOrigins = FRONTEND_URL ? FRONTEND_URL.split(',') : []; // Handle if FRONTEND_URL is undefined
+const allowedOrigins = FRONTEND_URL ? FRONTEND_URL.split(',') : []; 
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -50,13 +49,13 @@ const corsOptions = {
   allowedHeaders: 'Content-Type,Authorization',
 };
 app.use(cors(corsOptions));
-app.use(morgan('dev')); // Logger for HTTP requests, useful for seeing what's happening
-app.use(cookieParser()); // Parses cookies attached to the request object
+app.use(morgan('dev')); 
+app.use(cookieParser()); 
 
 app.post('/api/payments/flutterwave/webhook', express.raw({ type: 'application/json' }), flutterwaveWebhookHandler);
 
-app.use(express.json({ limit: '10mb' })); // Parses JSON request bodies with a larger limit
-app.use(express.urlencoded({ extended: true })); // Parses URL-encoded request bodies
+app.use(express.json({ limit: '10mb' })); 
+app.use(express.urlencoded({ extended: true })); 
 
 const cloudinary = require('cloudinary').v2;
 cloudinary.config({
@@ -71,7 +70,7 @@ mongoose
   .then(() => console.log('✅ MongoDB connected successfully!'))
   .catch(err => {
     console.error('❌ MongoDB connection error:', err);
-    process.exit(1); // Exit the process on a critical DB connection failure
+    process.exit(1); 
   });
 mongoose.connection.once('open', async () => {
   try {
@@ -94,8 +93,8 @@ const cartRoutes = require('./routes/cartRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const favoriteRoutes = require('./routes/favoriteRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
-const uploadRoutes = require('./routes/uploadRoutes'); // For image uploads
-const paymentRoutes = require('./routes/paymentRoutes'); // Payment routes import
+const uploadRoutes = require('./routes/uploadRoutes'); 
+const paymentRoutes = require('./routes/paymentRoutes'); 
 const adminProductRoutes = require('./routes/admin/adminProductRoutes');
 const adminUserRoutes = require('./routes/admin/adminUserRoutes');
 const adminOrderRoutes = require('./routes/admin/adminOrderRoutes');
@@ -119,8 +118,8 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/reviews', reviewRoutes);
-app.use('/api/upload', uploadRoutes); // Image upload route
-app.use('/api/payments', paymentRoutes); // Mount payment routes
+app.use('/api/upload', uploadRoutes); 
+app.use('/api/payments', paymentRoutes); 
 app.use('/api/admin/products', adminProductRoutes);
 app.use('/api/admin/users', adminUserRoutes);
 app.use('/api/admin/orders', adminOrderRoutes);

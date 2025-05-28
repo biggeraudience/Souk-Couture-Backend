@@ -1,16 +1,15 @@
 const jwt = require('jsonwebtoken');
-const asyncHandler = require('express-async-handler'); // Ensure you install this: npm i express-async-handler
+const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
 
 const protect = asyncHandler(async (req, res, next) => {
   let token;
 
-  // Check for JWT in Authorization header (Bearer token)
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select('-password'); // Attach user to request, exclude password
+      req.user = await User.findById(decoded.id).select('-password'); 
       next();
     } catch (error) {
       console.error('Token verification failed:', error.message);

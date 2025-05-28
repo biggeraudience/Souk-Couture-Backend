@@ -1,18 +1,14 @@
 const asyncHandler = require('../utils/asyncHandler');
-const Category = require('../models/Category'); // Assuming you have this model
+const Category = require('../models/Category'); 
 
-// @desc    Get all categories
-// @route   GET /api/categories
-// @access  Public
+
 const getCategories = asyncHandler(async (req, res) => {
     console.log('Fetching all categories (placeholder)');
     const categories = await Category.find({});
     res.json(categories);
 });
 
-// @desc    Get single category by ID
-// @route   GET /api/categories/:id
-// @access  Public
+
 const getCategoryById = asyncHandler(async (req, res) => {
     console.log(`Workspaceing category with ID: ${req.params.id} (placeholder)`);
     const category = await Category.findById(req.params.id);
@@ -25,9 +21,7 @@ const getCategoryById = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    Create a new category (Admin only)
-// @route   POST /api/categories
-// @access  Private/Admin
+
 const createCategory = asyncHandler(async (req, res) => {
     const { name, description } = req.body;
 
@@ -41,16 +35,14 @@ const createCategory = asyncHandler(async (req, res) => {
     const category = new Category({
         name,
         description,
-        user: req.user._id, // Assuming user creates it for tracking
+        user: req.user._id, 
     });
 
     const createdCategory = await category.save();
     res.status(201).json(createdCategory);
 });
 
-// @desc    Update a category (Admin only)
-// @route   PUT /api/categories/:id
-// @access  Private/Admin
+
 const updateCategory = asyncHandler(async (req, res) => {
     const { name, description } = req.body;
 
@@ -68,14 +60,12 @@ const updateCategory = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    Delete a category (Admin only)
-// @route   DELETE /api/categories/:id
-// @access  Private/Admin
+
 const deleteCategory = asyncHandler(async (req, res) => {
     const category = await Category.findById(req.params.id);
 
     if (category) {
-        await Category.deleteOne({ _id: category._id }); // Use deleteOne for Mongoose 6+
+        await Category.deleteOne({ _id: category._id }); 
         res.json({ message: 'Category removed' });
     } else {
         res.status(404);

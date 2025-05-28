@@ -8,17 +8,13 @@ const Promotion = require('../models/Promotion');
 const Message = require('../models/Message');
 const cloudinary = require('../config/cloudinary'); // Make sure this is imported
 
-// @desc    Get all users (Admin)
-// @route   GET /api/admin/users
-// @access  Private/Admin
+
 const getAllUsers = asyncHandler(async (req, res) => {
     const users = await User.find({}).select('-password'); // Exclude passwords
     res.json(users);
 });
 
-// @desc    Get user by ID (Admin)
-// @route   GET /api/admin/users/:id
-// @access  Private/Admin
+
 const getUserById = asyncHandler(async (req, res) => {
     const user = await User.findById(req.params.id).select('-password');
     if (user) {
@@ -29,20 +25,17 @@ const getUserById = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    Update user (e.g., change role, name, email) (Admin)
-// @route   PUT /api/admin/users/:id
-// @access  Private/Admin
+
 const updateUser = asyncHandler(async (req, res) => {
     const user = await User.findById(req.params.id);
 
     if (user) {
         user.name = req.body.name || user.name;
         user.email = req.body.email || user.email;
-        user.role = req.body.role || user.role; // Allow changing role
+        user.role = req.body.role || user.role; 
 
-        // Important: If changing password, hash it. For admin, consider a separate 'reset password' flow.
         if (req.body.password) {
-            user.password = req.body.password; // pre-save hook handles hashing
+            user.password = req.body.password; 
         }
 
         const updatedUser = await user.save();
@@ -58,9 +51,7 @@ const updateUser = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    Delete a user (Admin)
-// @route   DELETE /api/admin/users/:id
-// @access  Private/Admin
+
 const deleteUser = asyncHandler(async (req, res) => {
     const user = await User.findById(req.params.id);
 
@@ -87,15 +78,15 @@ const createProduct = asyncHandler(async (req, res) => {
         sizes,
         colors,
         stock,
-        isBespoke, // Corresponds to isFeatured in your frontend form
+        isBespoke, 
         images, // Array of Cloudinary URLs
-        // New fields from frontend form:
+        
         gender,
         subCategory,
         material,
         tags,
         sku,
-        availability, // Corresponds to availability in your frontend form
+        availability,
         careInstructions,
         weight,
         dimensions,
@@ -103,7 +94,7 @@ const createProduct = asyncHandler(async (req, res) => {
         countryOfOrigin,
     } = req.body;
 
-    // Basic validation (adjust as needed based on required fields in your Product model)
+    
     if (!name || !description || !price || !category || !stock || !images || images.length === 0) {
         res.status(400);
         throw new Error('Please fill in all required product fields and upload at least one image.');
@@ -125,10 +116,10 @@ const createProduct = asyncHandler(async (req, res) => {
             sizes: Array.isArray(sizes) ? sizes : sizes.split(',').map(s => s.trim()).filter(Boolean),
             colors: Array.isArray(colors) ? colors : colors.split(',').map(c => c.trim()).filter(Boolean),
             stock,
-            isBespoke: isBespoke || false, // Use isFeatured from frontend as isBespoke for now
-            images: images, // Cloudinary URLs
-            user: req.user._id, // User who created it (admin)
-            // Map additional fields from frontend form
+            isBespoke: isBespoke || false,
+            images: images, 
+            user: req.user._id, 
+            
             gender: gender,
             subCategory: subCategory || null, // Optional
             material: material || null, // Optional
@@ -161,9 +152,9 @@ const updateProduct = asyncHandler(async (req, res) => {
         sizes,
         colors,
         stock,
-        isBespoke, // Corresponds to isFeatured in your frontend form
-        images, // Array of Cloudinary URLs
-        // New fields from frontend form:
+        isBespoke, 
+        images, 
+        
         gender,
         subCategory,
         material,
@@ -186,7 +177,7 @@ const updateProduct = asyncHandler(async (req, res) => {
         product.stock = stock !== undefined ? stock : product.stock;
         product.images = images || product.images; // Update images array
 
-        // If category ID is provided, find and update
+       
         if (category) {
             const existingCategory = await Category.findById(category);
             if (!existingCategory) {
@@ -196,12 +187,12 @@ const updateProduct = asyncHandler(async (req, res) => {
             product.category = existingCategory._id;
         }
 
-        // Handle array fields (convert comma-separated strings to arrays if needed)
+        
         product.sizes = Array.isArray(sizes) ? sizes : (sizes ? sizes.split(',').map(s => s.trim()).filter(Boolean) : product.sizes);
         product.colors = Array.isArray(colors) ? colors : (colors ? colors.split(',').map(c => c.trim()).filter(Boolean) : product.colors);
         product.tags = Array.isArray(tags) ? tags : (tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : product.tags);
 
-        // Map additional fields from frontend form
+      
         product.isBespoke = isBespoke !== undefined ? isBespoke : product.isBespoke;
         product.gender = gender || product.gender;
         product.subCategory = subCategory || product.subCategory;
@@ -228,13 +219,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
     const product = await Product.findById(req.params.id);
 
     if (product) {
-        // Optional: Delete images from Cloudinary before deleting product
-        // This requires iterating through product.images and calling cloudinary.uploader.destroy()
-        // Example:
-        // for (const imageUrl of product.images) {
-        //     const publicId = imageUrl.split('/').pop().split('.')[0]; // Extract public_id from URL
-        //     await cloudinary.uploader.destroy(`souk-couture/products/${publicId}`);
-        // }
+       
 
         await product.deleteOne();
         res.json({ message: 'Product removed' });
@@ -246,11 +231,10 @@ const deleteProduct = asyncHandler(async (req, res) => {
 
 
 const getAdminProducts = asyncHandler(async (req, res) => {
-    // This function is for the admin's product listing page
-    // It can include pagination, more detailed filters specific to admin needs
+    
     const products = await Product.find({})
         .populate('category', 'name') // Populate category details
-        .sort({ createdAt: -1 }); // Latest products first
+        .sort({ createdAt: -1 }); 
     res.json(products);
 });
 

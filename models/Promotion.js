@@ -7,11 +7,11 @@ const promotionSchema = mongoose.Schema(
         status: { type: String, enum: ['active', 'inactive', 'expired'], default: 'active' },
         startDate: { type: Date, required: true },
         endDate: { type: Date, required: true },
-        details: { // Flexible field for different promo types
+        details: { 
             discountPercentage: { type: Number, min: 0, max: 100 },
-            code: { type: String, unique: true, sparse: true }, // Sparse allows null values for non-code promos
-            bannerImage: { type: String }, // URL for banner promos
-            // ... other specific promo details
+            code: { type: String, unique: true, sparse: true }, 
+            bannerImage: { type: String },
+            
         },
     },
     { timestamps: true }

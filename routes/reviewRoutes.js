@@ -2,11 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const asyncHandler = require('../utils/asyncHandler');
-const Product = require('../models/Product'); // Ensure Product model is available
+const Product = require('../models/Product'); 
 
-// @desc    Create new review for a product
-// @route   POST /api/reviews/:productId
-// @access  Private
+
 router.post('/:productId', protect, asyncHandler(async (req, res) => {
     const { rating, comment } = req.body;
 
